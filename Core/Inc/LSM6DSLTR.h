@@ -46,6 +46,12 @@
 #define OUTZ_L_XL	0x2C
 #define OUTZ_H_XL	0x2D
 
+#define FREE_FALL 0x17
+#define FREE_FALL_TH 0x01
+#define FREE_FALL_DURATION 0x03
+#define WAKE_UP_SRC 0x1B
+#define TAP_CFG 0x58
+
 
 #define ALPHA 0.98f // Filtre katsayısı
 
@@ -72,6 +78,6 @@ void LSM6DSLTR_Read_Gyro_Data(LSM6DSLTR* Lsm_Sensor);
 void calculate_roll_pitch(LSM6DSLTR *Lsm_Sensor);
 void update_angles(LSM6DSLTR *Lsm_Sensor);
 int IS_MPU_READY();
-
+void FreeFall_Detection(void);
 
 #endif /* INC_LSM6DSLTR_H_ */

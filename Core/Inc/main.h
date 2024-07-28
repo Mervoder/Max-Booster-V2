@@ -93,6 +93,8 @@ void Error_Handler(void);
 #define GATE_B_GPIO_Port GPIOB
 #define GATE_A_Pin GPIO_PIN_4
 #define GATE_A_GPIO_Port GPIOB
+#define INT1_Pin GPIO_PIN_8
+#define INT1_GPIO_Port GPIOB
 #define INT2_Pin GPIO_PIN_9
 #define INT2_GPIO_Port GPIOB
 

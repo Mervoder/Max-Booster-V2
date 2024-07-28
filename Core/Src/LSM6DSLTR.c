@@ -20,8 +20,8 @@ void LSM6DSLTR_Init()
 	uint8_t data1;
 
 	// Gyro ve Accel interrupt pin 1 aktif
-	data1= 0x03;
-	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, INT1_CTR, 1, &data1, 1, 1);
+//	data1= 0x03;
+//	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, INT1_CTR, 1, &data1, 1, 1);
 
 	data1 = 0xA4; // 16G 6.66khz
 	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, CTRL1_XL, 1, &data1,  1, 1);
@@ -35,11 +35,23 @@ void LSM6DSLTR_Init()
 	data1= 0x08;
 	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, CTRL4_C, 1, &data1, 1, 1);
 
+	data1 = 0x38;
+	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, CTRL10_C, 1, &data1, 1, 1);
 
-
-
+	data1 = 0x80;
+	HAL_I2C_Mem_Write(&hi2c1, LSM6DSL_Write_Address, TAP_CFG, 1, &data1, 1, 1);
 }
 
+void FreeFall_Detection(void)
+{
+    uint8_t status;
+    HAL_I2C_Mem_Read(&hi2c1, LSM6DSL_Read_Address, WAKE_UP_SRC, I2C_MEMADD_SIZE_8BIT, &status, 1, HAL_MAX_DELAY);
+
+    if (status & 0x20)  // Free-fall detected
+    {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4,SET);  // Toggle an LED or take appropriate action
+    }
+}
 
 void LSM6DSLTR_Read_Accel_Data(LSM6DSLTR* Lsm_Sensor)
 {

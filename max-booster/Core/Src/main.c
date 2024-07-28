@@ -501,8 +501,6 @@ for(uint8_t i=0;i<5;i++)
 	//	 HAL_UART_Transmit(&huart6, "V4-MAXXX",9 , 1000);
 
 
-
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -107,6 +107,10 @@ float prev_alt=0;
 float speed=0;
 
 
+float real_pitch, real_roll , toplam_pitch,toplam_roll;
+uint8_t  sensor_counter =0;
+
+
 typedef union{
   float fVal;
   unsigned char array[4];
@@ -359,8 +363,23 @@ for(uint8_t i=0;i<5;i++)
 					 Lsm_Sensor.Gyro_Y=FIRFilter_Update(&IMU_GYROY, Lsm_Sensor.Gyro_Y);
 					 Lsm_Sensor.Gyro_Z=FIRFilter_Update(&IMU_GYROZ, Lsm_Sensor.Gyro_Z);
 
+					 toplam_pitch+= Lsm_Sensor.Pitch;
+					 toplam_roll+= Lsm_Sensor.Roll;
+
+					 sensor_counter++;
+					 if(sensor_counter == 6)
+					 {
+						 real_pitch = toplam_pitch/6;
+						 real_roll = toplam_roll/6;
+						 toplam_roll=0;
+						 toplam_pitch=0;
+						 sensor_counter =0;
+					 }
+
+
 					 stage_communication=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
 					 BUTTON_STATE=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
+					 FreeFall_Detection();
 		   }
 
 
@@ -469,9 +488,9 @@ for(uint8_t i=0;i<5;i++)
  		  	  	  	  case RAMPA:
 		  	  	  		  	  v4_mod=1;
  		  	  	  		  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
- 		  	  	  		  if(Lsm_Sensor.Accel_X > 3){
+ 		  	  	  		  if(Lsm_Sensor.Accel_X > 7){
  		  	  	  		  	  BOOSTER=UCUS;
- 	 		  	  	    	  HAL_TIM_Base_Start_IT(&htim6);
+ 	 		  	  	    	  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
  		  	  	  		  	  }
  		  	  	  		  	  break;
  		  	  	      case UCUS:
@@ -539,6 +558,12 @@ for(uint8_t i=0;i<5;i++)
 
 
 			}
+
+
+	//	  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9)|| HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) )
+	//	  {
+
+		//  }
 
 
     /* USER CODE END WHILE */
@@ -1019,8 +1044,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB8 INT2_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|INT2_Pin;
+  /*Configure GPIO pins : INT1_Pin INT2_Pin */
+  GPIO_InitStruct.Pin = INT1_Pin|INT2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
