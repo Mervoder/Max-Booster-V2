@@ -463,7 +463,7 @@ for(uint8_t i=0;i<5;i++)
 			 }
 
 		 float2unit8 f2u8_pitch;
-		 f2u8_pitch.fVal=Lsm_Sensor.Pitch;
+		 f2u8_pitch.fVal=real_pitch;
 			 for(uint8_t i=0;i<4;i++)
 			 {
 				loratx[i+45]=f2u8_pitch.array[i];

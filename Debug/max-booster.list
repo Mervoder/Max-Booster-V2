@@ -37,11 +37,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  00026d0e  00000000  00000000  0002ea25  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001df71  00000000  00000000  00055733  2**0
+ 17 .debug_line   0001df6e  00000000  00000000  00055733  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000e6e1a  00000000  00000000  000736a4  2**0
+ 18 .debug_str    000e6e1a  00000000  00000000  000736a1  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000086  00000000  00000000  0015a4be  2**0
+ 19 .comment      00000086  00000000  00000000  0015a4bb  2**0
                   CONTENTS, READONLY
  20 .debug_frame  000075a4  00000000  00000000  0015a544  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -7781,9 +7781,9 @@ for(uint8_t i=0;i<5;i++)
 			 }
 
 		 float2unit8 f2u8_pitch;
-		 f2u8_pitch.fVal=Lsm_Sensor.Pitch;
- 80040c2:	4b5e      	ldr	r3, [pc, #376]	@ (800423c <main+0x85c>)
- 80040c4:	69db      	ldr	r3, [r3, #28]
+		 f2u8_pitch.fVal=real_pitch;
+ 80040c2:	4b5f      	ldr	r3, [pc, #380]	@ (8004240 <main+0x860>)
+ 80040c4:	681b      	ldr	r3, [r3, #0]
  80040c6:	607b      	str	r3, [r7, #4]
 			 for(uint8_t i=0;i<4;i++)
  80040c8:	2300      	movs	r3, #0
@@ -7809,17 +7809,17 @@ for(uint8_t i=0;i<5;i++)
 			 }
 
 							loratx[49]=v4_battery;
- 80040f8:	4b51      	ldr	r3, [pc, #324]	@ (8004240 <main+0x860>)
+ 80040f8:	4b52      	ldr	r3, [pc, #328]	@ (8004244 <main+0x864>)
  80040fa:	781a      	ldrb	r2, [r3, #0]
  80040fc:	4b4b      	ldr	r3, [pc, #300]	@ (800422c <main+0x84c>)
  80040fe:	f883 2031 	strb.w	r2, [r3, #49]	@ 0x31
 							loratx[50]=v4_mod;
- 8004102:	4b50      	ldr	r3, [pc, #320]	@ (8004244 <main+0x864>)
+ 8004102:	4b51      	ldr	r3, [pc, #324]	@ (8004248 <main+0x868>)
  8004104:	781a      	ldrb	r2, [r3, #0]
  8004106:	4b49      	ldr	r3, [pc, #292]	@ (800422c <main+0x84c>)
  8004108:	f883 2032 	strb.w	r2, [r3, #50]	@ 0x32
 							loratx[51]=stage_communication;
- 800410c:	4b4e      	ldr	r3, [pc, #312]	@ (8004248 <main+0x868>)
+ 800410c:	4b4f      	ldr	r3, [pc, #316]	@ (800424c <main+0x86c>)
  800410e:	781a      	ldrb	r2, [r3, #0]
  8004110:	4b46      	ldr	r3, [pc, #280]	@ (800422c <main+0x84c>)
  8004112:	f883 2033 	strb.w	r2, [r3, #51]	@ 0x33
@@ -7849,17 +7849,17 @@ for(uint8_t i=0;i<5;i++)
 			  HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
  8004142:	2246      	movs	r2, #70	@ 0x46
  8004144:	4939      	ldr	r1, [pc, #228]	@ (800422c <main+0x84c>)
- 8004146:	4841      	ldr	r0, [pc, #260]	@ (800424c <main+0x86c>)
+ 8004146:	4842      	ldr	r0, [pc, #264]	@ (8004250 <main+0x870>)
  8004148:	f005 f8d5 	bl	80092f6 <HAL_UART_Transmit_IT>
 
             		 }
 
 
  		  	  	  	  switch(BOOSTER){
- 800414c:	4b40      	ldr	r3, [pc, #256]	@ (8004250 <main+0x870>)
+ 800414c:	4b41      	ldr	r3, [pc, #260]	@ (8004254 <main+0x874>)
  800414e:	781b      	ldrb	r3, [r3, #0]
  8004150:	2b07      	cmp	r3, #7
- 8004152:	f200 809e 	bhi.w	8004292 <main+0x8b2>
+ 8004152:	f200 80a0 	bhi.w	8004296 <main+0x8b6>
  8004156:	a201      	add	r2, pc, #4	@ (adr r2, 800415c <main+0x77c>)
  8004158:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
  800415c:	0800417d 	.word	0x0800417d
@@ -7867,13 +7867,13 @@ for(uint8_t i=0;i<5;i++)
  8004164:	080041cf 	.word	0x080041cf
  8004168:	08004207 	.word	0x08004207
  800416c:	08004215 	.word	0x08004215
- 8004170:	08004271 	.word	0x08004271
- 8004174:	08004279 	.word	0x08004279
- 8004178:	08004281 	.word	0x08004281
+ 8004170:	08004275 	.word	0x08004275
+ 8004174:	0800427d 	.word	0x0800427d
+ 8004178:	08004285 	.word	0x08004285
 
  		  	  	  	  case RAMPA:
 		  	  	  		  	  v4_mod=1;
- 800417c:	4b31      	ldr	r3, [pc, #196]	@ (8004244 <main+0x864>)
+ 800417c:	4b32      	ldr	r3, [pc, #200]	@ (8004248 <main+0x868>)
  800417e:	2201      	movs	r2, #1
  8004180:	701a      	strb	r2, [r3, #0]
  		  	  	  		  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
@@ -7888,47 +7888,47 @@ for(uint8_t i=0;i<5;i++)
  	 		  	  	    	  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
  		  	  	  		  	  }
  		  	  	  		  	  break;
- 8004196:	e07c      	b.n	8004292 <main+0x8b2>
+ 8004196:	e07e      	b.n	8004296 <main+0x8b6>
  		  	  	  		  	  BOOSTER=UCUS;
- 8004198:	4b2d      	ldr	r3, [pc, #180]	@ (8004250 <main+0x870>)
+ 8004198:	4b2e      	ldr	r3, [pc, #184]	@ (8004254 <main+0x874>)
  800419a:	2201      	movs	r2, #1
  800419c:	701a      	strb	r2, [r3, #0]
  	 		  	  	    	  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
- 800419e:	482d      	ldr	r0, [pc, #180]	@ (8004254 <main+0x874>)
+ 800419e:	482e      	ldr	r0, [pc, #184]	@ (8004258 <main+0x878>)
  80041a0:	f004 fcca 	bl	8008b38 <HAL_TIM_Base_Start_IT>
  		  	  	  		  	  break;
- 80041a4:	e075      	b.n	8004292 <main+0x8b2>
+ 80041a4:	e077      	b.n	8004296 <main+0x8b6>
  		  	  	      case UCUS:
 		  	  	    	      v4_mod=2;
- 80041a6:	4b27      	ldr	r3, [pc, #156]	@ (8004244 <main+0x864>)
+ 80041a6:	4b28      	ldr	r3, [pc, #160]	@ (8004248 <main+0x868>)
  80041a8:	2202      	movs	r2, #2
  80041aa:	701a      	strb	r2, [r3, #0]
  		  	  	    	  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
  		  	  	    	  if(motor_burnout==2)
- 80041ac:	4b2a      	ldr	r3, [pc, #168]	@ (8004258 <main+0x878>)
+ 80041ac:	4b2b      	ldr	r3, [pc, #172]	@ (800425c <main+0x87c>)
  80041ae:	781b      	ldrb	r3, [r3, #0]
  80041b0:	2b02      	cmp	r3, #2
- 80041b2:	d169      	bne.n	8004288 <main+0x8a8>
+ 80041b2:	d16b      	bne.n	800428c <main+0x8ac>
  		  	  	    	  {	 HAL_TIM_Base_Stop_IT(&htim6);
- 80041b4:	4827      	ldr	r0, [pc, #156]	@ (8004254 <main+0x874>)
+ 80041b4:	4828      	ldr	r0, [pc, #160]	@ (8004258 <main+0x878>)
  80041b6:	f004 fd2f 	bl	8008c18 <HAL_TIM_Base_Stop_IT>
  		  	  	    	     HAL_TIM_Base_Start_IT(&htim7);
- 80041ba:	4828      	ldr	r0, [pc, #160]	@ (800425c <main+0x87c>)
+ 80041ba:	4829      	ldr	r0, [pc, #164]	@ (8004260 <main+0x880>)
  80041bc:	f004 fcbc 	bl	8008b38 <HAL_TIM_Base_Start_IT>
  		  	  	    	  	 BOOSTER=BURNOUT;
- 80041c0:	4b23      	ldr	r3, [pc, #140]	@ (8004250 <main+0x870>)
+ 80041c0:	4b24      	ldr	r3, [pc, #144]	@ (8004254 <main+0x874>)
  80041c2:	2202      	movs	r2, #2
  80041c4:	701a      	strb	r2, [r3, #0]
  		  	  	    	  	 motor_burnout=0;
- 80041c6:	4b24      	ldr	r3, [pc, #144]	@ (8004258 <main+0x878>)
+ 80041c6:	4b25      	ldr	r3, [pc, #148]	@ (800425c <main+0x87c>)
  80041c8:	2200      	movs	r2, #0
  80041ca:	701a      	strb	r2, [r3, #0]
    		  	  	    	  }
  		  	  	  		  	   break;
- 80041cc:	e05c      	b.n	8004288 <main+0x8a8>
+ 80041cc:	e05e      	b.n	800428c <main+0x8ac>
  		  	  	      case BURNOUT:
 		  	  	    	  	  v4_mod=3;
- 80041ce:	4b1d      	ldr	r3, [pc, #116]	@ (8004244 <main+0x864>)
+ 80041ce:	4b1e      	ldr	r3, [pc, #120]	@ (8004248 <main+0x868>)
  80041d0:	2203      	movs	r2, #3
  80041d2:	701a      	strb	r2, [r3, #0]
  		  	  	    	  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
@@ -7944,51 +7944,51 @@ for(uint8_t i=0;i<5;i++)
  		  	  	    		motor_burnout=0;
  		  	  	    	  }
  		  	  	  		       break;
- 80041e8:	e050      	b.n	800428c <main+0x8ac>
+ 80041e8:	e052      	b.n	8004290 <main+0x8b0>
  		  	  	    	  if(Lsm_Sensor.Accel_X<-3 && motor_burnout==2 ){
- 80041ea:	4b1b      	ldr	r3, [pc, #108]	@ (8004258 <main+0x878>)
+ 80041ea:	4b1c      	ldr	r3, [pc, #112]	@ (800425c <main+0x87c>)
  80041ec:	781b      	ldrb	r3, [r3, #0]
  80041ee:	2b02      	cmp	r3, #2
- 80041f0:	d14c      	bne.n	800428c <main+0x8ac>
+ 80041f0:	d14e      	bne.n	8004290 <main+0x8b0>
  		  	  	    		HAL_TIM_Base_Stop_IT(&htim7);
- 80041f2:	481a      	ldr	r0, [pc, #104]	@ (800425c <main+0x87c>)
+ 80041f2:	481b      	ldr	r0, [pc, #108]	@ (8004260 <main+0x880>)
  80041f4:	f004 fd10 	bl	8008c18 <HAL_TIM_Base_Stop_IT>
  		  	  	    		BOOSTER=AYIR;
- 80041f8:	4b15      	ldr	r3, [pc, #84]	@ (8004250 <main+0x870>)
+ 80041f8:	4b16      	ldr	r3, [pc, #88]	@ (8004254 <main+0x874>)
  80041fa:	2203      	movs	r2, #3
  80041fc:	701a      	strb	r2, [r3, #0]
  		  	  	    		motor_burnout=0;
- 80041fe:	4b16      	ldr	r3, [pc, #88]	@ (8004258 <main+0x878>)
+ 80041fe:	4b17      	ldr	r3, [pc, #92]	@ (800425c <main+0x87c>)
  8004200:	2200      	movs	r2, #0
  8004202:	701a      	strb	r2, [r3, #0]
  		  	  	  		       break;
- 8004204:	e042      	b.n	800428c <main+0x8ac>
+ 8004204:	e044      	b.n	8004290 <main+0x8b0>
  		  	  	      case AYIR:
 		  	  	    	  	  v4_mod=4;
- 8004206:	4b0f      	ldr	r3, [pc, #60]	@ (8004244 <main+0x864>)
+ 8004206:	4b10      	ldr	r3, [pc, #64]	@ (8004248 <main+0x868>)
  8004208:	2204      	movs	r2, #4
  800420a:	701a      	strb	r2, [r3, #0]
  		  	  	    	  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
 
  		  	  	    	      BOOSTER=AYRILDI_MI;
- 800420c:	4b10      	ldr	r3, [pc, #64]	@ (8004250 <main+0x870>)
+ 800420c:	4b11      	ldr	r3, [pc, #68]	@ (8004254 <main+0x874>)
  800420e:	2204      	movs	r2, #4
  8004210:	701a      	strb	r2, [r3, #0]
  		  	  	  		       break;
- 8004212:	e03e      	b.n	8004292 <main+0x8b2>
+ 8004212:	e040      	b.n	8004296 <main+0x8b6>
  		  	  	      case AYRILDI_MI:
 		  	  	    	  	  v4_mod=5;
- 8004214:	4b0b      	ldr	r3, [pc, #44]	@ (8004244 <main+0x864>)
+ 8004214:	4b0c      	ldr	r3, [pc, #48]	@ (8004248 <main+0x868>)
  8004216:	2205      	movs	r2, #5
  8004218:	701a      	strb	r2, [r3, #0]
  		  	  	    	  //STAGE COMMUNICATION !!!!!
  		  	  	    	  if(stage_communication==0){
- 800421a:	4b0b      	ldr	r3, [pc, #44]	@ (8004248 <main+0x868>)
+ 800421a:	4b0c      	ldr	r3, [pc, #48]	@ (800424c <main+0x86c>)
  800421c:	781b      	ldrb	r3, [r3, #0]
  800421e:	2b00      	cmp	r3, #0
- 8004220:	d11e      	bne.n	8004260 <main+0x880>
+ 8004220:	d120      	bne.n	8004264 <main+0x884>
  		  	  	    		  BOOSTER=AYRILDI;
- 8004222:	4b0b      	ldr	r3, [pc, #44]	@ (8004250 <main+0x870>)
+ 8004222:	4b0c      	ldr	r3, [pc, #48]	@ (8004254 <main+0x874>)
  8004224:	2205      	movs	r2, #5
  8004226:	701a      	strb	r2, [r3, #0]
  		  	  	    	  }
@@ -7996,137 +7996,137 @@ for(uint8_t i=0;i<5;i++)
  		  	  	    		  BOOSTER=AYRILMADI;
  		  	  	    	  }
  		  	  	  		       break;
- 8004228:	e032      	b.n	8004290 <main+0x8b0>
+ 8004228:	e034      	b.n	8004294 <main+0x8b4>
  800422a:	bf00      	nop
  800422c:	200005d4 	.word	0x200005d4
  8004230:	20000624 	.word	0x20000624
  8004234:	20000638 	.word	0x20000638
  8004238:	2000061c 	.word	0x2000061c
  800423c:	20000700 	.word	0x20000700
- 8004240:	200005ce 	.word	0x200005ce
- 8004244:	200005cf 	.word	0x200005cf
- 8004248:	200005d0 	.word	0x200005d0
- 800424c:	200004fc 	.word	0x200004fc
- 8004250:	2000064d 	.word	0x2000064d
- 8004254:	20000354 	.word	0x20000354
- 8004258:	200005d1 	.word	0x200005d1
- 800425c:	2000039c 	.word	0x2000039c
+ 8004240:	2000063c 	.word	0x2000063c
+ 8004244:	200005ce 	.word	0x200005ce
+ 8004248:	200005cf 	.word	0x200005cf
+ 800424c:	200005d0 	.word	0x200005d0
+ 8004250:	200004fc 	.word	0x200004fc
+ 8004254:	2000064d 	.word	0x2000064d
+ 8004258:	20000354 	.word	0x20000354
+ 800425c:	200005d1 	.word	0x200005d1
+ 8004260:	2000039c 	.word	0x2000039c
  		  	  	    	  else if(stage_communication==1){
- 8004260:	4b3b      	ldr	r3, [pc, #236]	@ (8004350 <main+0x970>)
- 8004262:	781b      	ldrb	r3, [r3, #0]
- 8004264:	2b01      	cmp	r3, #1
- 8004266:	d113      	bne.n	8004290 <main+0x8b0>
+ 8004264:	4b3a      	ldr	r3, [pc, #232]	@ (8004350 <main+0x970>)
+ 8004266:	781b      	ldrb	r3, [r3, #0]
+ 8004268:	2b01      	cmp	r3, #1
+ 800426a:	d113      	bne.n	8004294 <main+0x8b4>
  		  	  	    		  BOOSTER=AYRILMADI;
- 8004268:	4b3a      	ldr	r3, [pc, #232]	@ (8004354 <main+0x974>)
- 800426a:	2206      	movs	r2, #6
- 800426c:	701a      	strb	r2, [r3, #0]
+ 800426c:	4b39      	ldr	r3, [pc, #228]	@ (8004354 <main+0x974>)
+ 800426e:	2206      	movs	r2, #6
+ 8004270:	701a      	strb	r2, [r3, #0]
  		  	  	  		       break;
- 800426e:	e00f      	b.n	8004290 <main+0x8b0>
+ 8004272:	e00f      	b.n	8004294 <main+0x8b4>
  		  	  	      case AYRILDI:
 		  	  	    	  	 v4_mod=6;
- 8004270:	4b39      	ldr	r3, [pc, #228]	@ (8004358 <main+0x978>)
- 8004272:	2206      	movs	r2, #6
- 8004274:	701a      	strb	r2, [r3, #0]
+ 8004274:	4b38      	ldr	r3, [pc, #224]	@ (8004358 <main+0x978>)
+ 8004276:	2206      	movs	r2, #6
+ 8004278:	701a      	strb	r2, [r3, #0]
  		  	  	    	  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
  		  	  	  		       break;
- 8004276:	e00c      	b.n	8004292 <main+0x8b2>
+ 800427a:	e00c      	b.n	8004296 <main+0x8b6>
  		  	  	      case AYRILMADI:
 		  	  	    	  	  v4_mod=7;
- 8004278:	4b37      	ldr	r3, [pc, #220]	@ (8004358 <main+0x978>)
- 800427a:	2207      	movs	r2, #7
- 800427c:	701a      	strb	r2, [r3, #0]
+ 800427c:	4b36      	ldr	r3, [pc, #216]	@ (8004358 <main+0x978>)
+ 800427e:	2207      	movs	r2, #7
+ 8004280:	701a      	strb	r2, [r3, #0]
  		  	  	    	  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
 
  		  	  	  		       break;
- 800427e:	e008      	b.n	8004292 <main+0x8b2>
+ 8004282:	e008      	b.n	8004296 <main+0x8b6>
  		  	  	      case FINISH:
 		  	  	    	  	  v4_mod=8;
- 8004280:	4b35      	ldr	r3, [pc, #212]	@ (8004358 <main+0x978>)
- 8004282:	2208      	movs	r2, #8
- 8004284:	701a      	strb	r2, [r3, #0]
+ 8004284:	4b34      	ldr	r3, [pc, #208]	@ (8004358 <main+0x978>)
+ 8004286:	2208      	movs	r2, #8
+ 8004288:	701a      	strb	r2, [r3, #0]
  		  	  	    	  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
 
  		  	  	  		       break;
- 8004286:	e004      	b.n	8004292 <main+0x8b2>
+ 800428a:	e004      	b.n	8004296 <main+0x8b6>
  		  	  	  		  	   break;
- 8004288:	bf00      	nop
- 800428a:	e002      	b.n	8004292 <main+0x8b2>
- 		  	  	  		       break;
  800428c:	bf00      	nop
- 800428e:	e000      	b.n	8004292 <main+0x8b2>
+ 800428e:	e002      	b.n	8004296 <main+0x8b6>
  		  	  	  		       break;
  8004290:	bf00      	nop
+ 8004292:	e000      	b.n	8004296 <main+0x8b6>
+ 		  	  	  		       break;
+ 8004294:	bf00      	nop
  		  	  	  	  }
 
 
 
 		  if(adc_flag ==1)
- 8004292:	4b32      	ldr	r3, [pc, #200]	@ (800435c <main+0x97c>)
- 8004294:	781b      	ldrb	r3, [r3, #0]
- 8004296:	2b01      	cmp	r3, #1
- 8004298:	f47f acb6 	bne.w	8003c08 <main+0x228>
+ 8004296:	4b31      	ldr	r3, [pc, #196]	@ (800435c <main+0x97c>)
+ 8004298:	781b      	ldrb	r3, [r3, #0]
+ 800429a:	2b01      	cmp	r3, #1
+ 800429c:	f47f acb4 	bne.w	8003c08 <main+0x228>
 		  {
 			  if(adc > 2476) adc = 2234;
- 800429c:	4b30      	ldr	r3, [pc, #192]	@ (8004360 <main+0x980>)
- 800429e:	edd3 7a00 	vldr	s15, [r3]
- 80042a2:	ed9f 7a30 	vldr	s14, [pc, #192]	@ 8004364 <main+0x984>
- 80042a6:	eef4 7ac7 	vcmpe.f32	s15, s14
- 80042aa:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
- 80042ae:	dd02      	ble.n	80042b6 <main+0x8d6>
- 80042b0:	4b2b      	ldr	r3, [pc, #172]	@ (8004360 <main+0x980>)
- 80042b2:	4a2d      	ldr	r2, [pc, #180]	@ (8004368 <main+0x988>)
- 80042b4:	601a      	str	r2, [r3, #0]
+ 80042a0:	4b2f      	ldr	r3, [pc, #188]	@ (8004360 <main+0x980>)
+ 80042a2:	edd3 7a00 	vldr	s15, [r3]
+ 80042a6:	ed9f 7a2f 	vldr	s14, [pc, #188]	@ 8004364 <main+0x984>
+ 80042aa:	eef4 7ac7 	vcmpe.f32	s15, s14
+ 80042ae:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+ 80042b2:	dd02      	ble.n	80042ba <main+0x8da>
+ 80042b4:	4b2a      	ldr	r3, [pc, #168]	@ (8004360 <main+0x980>)
+ 80042b6:	4a2c      	ldr	r2, [pc, #176]	@ (8004368 <main+0x988>)
+ 80042b8:	601a      	str	r2, [r3, #0]
 			  if(adc < 1755) adc = 1755;
- 80042b6:	4b2a      	ldr	r3, [pc, #168]	@ (8004360 <main+0x980>)
- 80042b8:	edd3 7a00 	vldr	s15, [r3]
- 80042bc:	ed9f 7a2b 	vldr	s14, [pc, #172]	@ 800436c <main+0x98c>
- 80042c0:	eef4 7ac7 	vcmpe.f32	s15, s14
- 80042c4:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
- 80042c8:	d502      	bpl.n	80042d0 <main+0x8f0>
- 80042ca:	4b25      	ldr	r3, [pc, #148]	@ (8004360 <main+0x980>)
- 80042cc:	4a28      	ldr	r2, [pc, #160]	@ (8004370 <main+0x990>)
- 80042ce:	601a      	str	r2, [r3, #0]
+ 80042ba:	4b29      	ldr	r3, [pc, #164]	@ (8004360 <main+0x980>)
+ 80042bc:	edd3 7a00 	vldr	s15, [r3]
+ 80042c0:	ed9f 7a2a 	vldr	s14, [pc, #168]	@ 800436c <main+0x98c>
+ 80042c4:	eef4 7ac7 	vcmpe.f32	s15, s14
+ 80042c8:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+ 80042cc:	d502      	bpl.n	80042d4 <main+0x8f4>
+ 80042ce:	4b24      	ldr	r3, [pc, #144]	@ (8004360 <main+0x980>)
+ 80042d0:	4a27      	ldr	r2, [pc, #156]	@ (8004370 <main+0x990>)
+ 80042d2:	601a      	str	r2, [r3, #0]
 			  // 6V = 1755 adc val 1,41V
 			  // 8.4V = 2476 adc val 1,99V 0,58V
 
 		  adc_pil_val=(float)( ( ( (adc/4095)*3.3)-1.41) / (1.99-1.41) ) *100  ;
- 80042d0:	4b23      	ldr	r3, [pc, #140]	@ (8004360 <main+0x980>)
- 80042d2:	edd3 7a00 	vldr	s15, [r3]
- 80042d6:	ed9f 7a27 	vldr	s14, [pc, #156]	@ 8004374 <main+0x994>
- 80042da:	eec7 6a87 	vdiv.f32	s13, s15, s14
- 80042de:	ee16 0a90 	vmov	r0, s13
- 80042e2:	f7fc f949 	bl	8000578 <__aeabi_f2d>
- 80042e6:	a314      	add	r3, pc, #80	@ (adr r3, 8004338 <main+0x958>)
- 80042e8:	e9d3 2300 	ldrd	r2, r3, [r3]
- 80042ec:	f7fc f99c 	bl	8000628 <__aeabi_dmul>
- 80042f0:	4602      	mov	r2, r0
- 80042f2:	460b      	mov	r3, r1
- 80042f4:	4610      	mov	r0, r2
- 80042f6:	4619      	mov	r1, r3
- 80042f8:	a311      	add	r3, pc, #68	@ (adr r3, 8004340 <main+0x960>)
- 80042fa:	e9d3 2300 	ldrd	r2, r3, [r3]
- 80042fe:	f7fb ffdb 	bl	80002b8 <__aeabi_dsub>
- 8004302:	4602      	mov	r2, r0
- 8004304:	460b      	mov	r3, r1
- 8004306:	4610      	mov	r0, r2
- 8004308:	4619      	mov	r1, r3
- 800430a:	a30f      	add	r3, pc, #60	@ (adr r3, 8004348 <main+0x968>)
- 800430c:	e9d3 2300 	ldrd	r2, r3, [r3]
- 8004310:	f7fc fab4 	bl	800087c <__aeabi_ddiv>
- 8004314:	4602      	mov	r2, r0
- 8004316:	460b      	mov	r3, r1
- 8004318:	4610      	mov	r0, r2
- 800431a:	4619      	mov	r1, r3
- 800431c:	f7fc fc7c 	bl	8000c18 <__aeabi_d2f>
- 8004320:	ee07 0a10 	vmov	s14, r0
- 8004324:	eddf 7a14 	vldr	s15, [pc, #80]	@ 8004378 <main+0x998>
- 8004328:	ee67 7a27 	vmul.f32	s15, s14, s15
- 800432c:	4b13      	ldr	r3, [pc, #76]	@ (800437c <main+0x99c>)
- 800432e:	edc3 7a00 	vstr	s15, [r3]
+ 80042d4:	4b22      	ldr	r3, [pc, #136]	@ (8004360 <main+0x980>)
+ 80042d6:	edd3 7a00 	vldr	s15, [r3]
+ 80042da:	ed9f 7a26 	vldr	s14, [pc, #152]	@ 8004374 <main+0x994>
+ 80042de:	eec7 6a87 	vdiv.f32	s13, s15, s14
+ 80042e2:	ee16 0a90 	vmov	r0, s13
+ 80042e6:	f7fc f947 	bl	8000578 <__aeabi_f2d>
+ 80042ea:	a313      	add	r3, pc, #76	@ (adr r3, 8004338 <main+0x958>)
+ 80042ec:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 80042f0:	f7fc f99a 	bl	8000628 <__aeabi_dmul>
+ 80042f4:	4602      	mov	r2, r0
+ 80042f6:	460b      	mov	r3, r1
+ 80042f8:	4610      	mov	r0, r2
+ 80042fa:	4619      	mov	r1, r3
+ 80042fc:	a310      	add	r3, pc, #64	@ (adr r3, 8004340 <main+0x960>)
+ 80042fe:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 8004302:	f7fb ffd9 	bl	80002b8 <__aeabi_dsub>
+ 8004306:	4602      	mov	r2, r0
+ 8004308:	460b      	mov	r3, r1
+ 800430a:	4610      	mov	r0, r2
+ 800430c:	4619      	mov	r1, r3
+ 800430e:	a30e      	add	r3, pc, #56	@ (adr r3, 8004348 <main+0x968>)
+ 8004310:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 8004314:	f7fc fab2 	bl	800087c <__aeabi_ddiv>
+ 8004318:	4602      	mov	r2, r0
+ 800431a:	460b      	mov	r3, r1
+ 800431c:	4610      	mov	r0, r2
+ 800431e:	4619      	mov	r1, r3
+ 8004320:	f7fc fc7a 	bl	8000c18 <__aeabi_d2f>
+ 8004324:	ee07 0a10 	vmov	s14, r0
+ 8004328:	eddf 7a13 	vldr	s15, [pc, #76]	@ 8004378 <main+0x998>
+ 800432c:	ee67 7a27 	vmul.f32	s15, s14, s15
+ 8004330:	4b12      	ldr	r3, [pc, #72]	@ (800437c <main+0x99c>)
+ 8004332:	edc3 7a00 	vstr	s15, [r3]
 		   if(sensor_flag==1){
- 8004332:	e469      	b.n	8003c08 <main+0x228>
- 8004334:	f3af 8000 	nop.w
+ 8004336:	e467      	b.n	8003c08 <main+0x228>
  8004338:	66666666 	.word	0x66666666
  800433c:	400a6666 	.word	0x400a6666
  8004340:	28f5c28f 	.word	0x28f5c28f
