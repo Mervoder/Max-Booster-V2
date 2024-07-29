@@ -29,6 +29,7 @@
 #include <math.h>
 #include "FIR_FILTER.h"
 #include "string.h"
+#include "kalman.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,10 +106,12 @@ float alt=0;
 float P0 = 1013.25;
 float prev_alt=0;
 float speed=0;
-
+float altitude_max , speed_max, x_max;
 
 float real_pitch, real_roll , toplam_pitch,toplam_roll;
-uint8_t  sensor_counter =0;
+float altitude_kalman;
+uint8_t  sensor_counter =0, altitude_rampa_control=0;
+KalmanFilter kf;
 
 
 typedef union{
@@ -143,6 +146,7 @@ int8_t user_i2c_write(uint8_t id, uint8_t reg_addr, uint8_t *data, uint16_t len)
 void user_delay_ms(uint32_t period);
 float BME280_Get_Altitude(void);
 void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE);
+void union_converter();
 
 /* USER CODE END PFP */
 
@@ -210,7 +214,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		adc= HAL_ADC_GetValue(&hadc1);
 
 
-		adc_flag == 0;
+		adc_flag = 0;
 	}
 }
 
@@ -282,6 +286,7 @@ int main(void)
   LSM6DSLTR_Init();
   E220_CONFIG(0x6,0x4A,0X10,1);
   HAL_ADC_Start_IT(&hadc1);
+  KalmanFilter_Init(&kf, 0.005, 0.1, 0.0);
 
   dev.dev_id = BME280_I2C_ADDR_PRIM;
   dev.intf = BME280_I2C_INTF;
@@ -309,13 +314,6 @@ for(uint8_t i=0;i<5;i++)
   }
 }
 
-//     // W25Q_WriteData(0x000000, writeData, 50);
-//  	 W25Q_SectorErase(0x000000);
-//     // Bellekten veri okuma
-//     W25Q_ReadData(0x000000, readData, 50);
-//
-//
-//
 
 
   for(uint8_t i=0;i<30;i++)
@@ -344,10 +342,11 @@ for(uint8_t i=0;i<5;i++)
 					rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 					if(rslt == BME280_OK)
 					{
-					  temperature = comp_data.temperature;
+					  temperature = comp_data.temperature/100.00;
 					  humidity = comp_data.humidity;
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
+					  altitude_kalman= KalmanFilter_Update(&kf, altitude);
 					  speed=(altitude-prev_alt)*20;
 
 
@@ -383,7 +382,8 @@ for(uint8_t i=0;i<5;i++)
 		   }
 
 
-   if(lora_flag==1){
+   if(lora_flag==1)
+   {
 	   lora_flag=0;
 
 
@@ -393,159 +393,97 @@ for(uint8_t i=0;i<5;i++)
 		loratx[3]=DEVICE_ID;
 		loratx[4]=gps.sats_in_view;
 
-		 float2unit8 f2u8_gpsalt;
-	     f2u8_gpsalt.fVal=gps.altitude;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+5]=f2u8_gpsalt.array[i];
-			 }
+		union_converter();
 
-		 float2unit8 f2u8_latitude;
-		 f2u8_latitude.fVal=gps.latitude;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+9]=f2u8_latitude.array[i];
-			 }
+		loratx[49]=v4_battery;
+		loratx[50]=v4_mod;
+		loratx[51]=stage_communication;
+		 for(uint8_t i=52;i<69;i++)
+		 {
+			loratx[i]='0';
+		 }
 
-		 float2unit8 f2u8_longitude;
-		 f2u8_longitude.fVal=gps.longitude;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+13]=f2u8_longitude.array[i];
-			 }
+		loratx[69]='\n';
 
-		 float2unit8 f2u8_altitude;
-		 f2u8_altitude.fVal=altitude;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+17]=f2u8_altitude.array[i];
-			 }
-		 float2unit8 f2u8_speed;
-		 f2u8_speed.fVal=speed;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+21]=f2u8_speed.array[i];
-			 }
+    	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
 
-		 float2unit8 f2u8_temp;
-		 f2u8_temp.fVal=temperature;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+25]=f2u8_temp.array[i];
-			 }
-
-		 float2unit8 f2u8_accx;
-		 f2u8_accx.fVal=Lsm_Sensor.Accel_X;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+29]=f2u8_accx.array[i];
-			 }
-
-		 float2unit8 f2u8_accy;
-		 f2u8_accy.fVal=Lsm_Sensor.Accel_Y;
-		 	 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+33]=f2u8_accy.array[i];
-			 }
-
-		 float2unit8 f2u8_accz;
-		 f2u8_accz.fVal=Lsm_Sensor.Accel_Z;
-		 	 for(uint8_t i=0;i<4;i++)
-			 {
-			    loratx[i+37]=f2u8_accz.array[i];
-			 }
-
-		 float2unit8 f2u8_roll;
-		 f2u8_roll.fVal=Lsm_Sensor.Roll;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+41]=f2u8_roll.array[i];
-			 }
-
-		 float2unit8 f2u8_pitch;
-		 f2u8_pitch.fVal=real_pitch;
-			 for(uint8_t i=0;i<4;i++)
-			 {
-				loratx[i+45]=f2u8_pitch.array[i];
-			 }
-
-							loratx[49]=v4_battery;
-							loratx[50]=v4_mod;
-							loratx[51]=stage_communication;
-							 for(uint8_t i=52;i<69;i++)
-							 {
-								loratx[i]='0';
-							 }
-
-							loratx[69]='\n';
-			  HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
-
-            		 }
+         }
 
 
- 		  	  	  	  switch(BOOSTER){
+		  switch(BOOSTER){
 
- 		  	  	  	  case RAMPA:
-		  	  	  		  	  v4_mod=1;
- 		  	  	  		  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
- 		  	  	  		  if(Lsm_Sensor.Accel_X > 7){
- 		  	  	  		  	  BOOSTER=UCUS;
- 	 		  	  	    	  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
- 		  	  	  		  	  }
- 		  	  	  		  	  break;
- 		  	  	      case UCUS:
-		  	  	    	      v4_mod=2;
- 		  	  	    	  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
- 		  	  	    	  if(motor_burnout==2)
- 		  	  	    	  {	 HAL_TIM_Base_Stop_IT(&htim6);
- 		  	  	    	     HAL_TIM_Base_Start_IT(&htim7);
- 		  	  	    	  	 BOOSTER=BURNOUT;
- 		  	  	    	  	 motor_burnout=0;
-   		  	  	    	  }
- 		  	  	  		  	   break;
- 		  	  	      case BURNOUT:
-		  	  	    	  	  v4_mod=3;
- 		  	  	    	  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
- 		  	  	    	  if(Lsm_Sensor.Accel_X<-3 && motor_burnout==2 ){
- 		  	  	    		HAL_TIM_Base_Stop_IT(&htim7);
- 		  	  	    		BOOSTER=AYIR;
- 		  	  	    		motor_burnout=0;
- 		  	  	    	  }
- 		  	  	  		       break;
- 		  	  	      case AYIR:
-		  	  	    	  	  v4_mod=4;
- 		  	  	    	  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
+		  case RAMPA:
+				  v4_mod=1;
+			  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
+			  if(Lsm_Sensor.Accel_X > 7){
+				  BOOSTER=UCUS;
+				  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
+				  }
+				  break;
+		  case UCUS:
+				  v4_mod=2;
+			  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
+			  if(motor_burnout==2)
+			  {	 HAL_TIM_Base_Stop_IT(&htim6);
+				 HAL_TIM_Base_Start_IT(&htim7);
+				 BOOSTER=BURNOUT;
+				 motor_burnout=0;
+			  }
+				   break;
+		  case BURNOUT:
+				  v4_mod=3;
+			  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
+			  if(Lsm_Sensor.Accel_X<-3 && motor_burnout==2 ){
+				HAL_TIM_Base_Stop_IT(&htim7);
+				BOOSTER=AYIR;
+				motor_burnout=0;
+			  }
+				   break;
+		  case AYIR:
+				  v4_mod=4;
+			  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
 
- 		  	  	    	      BOOSTER=AYRILDI_MI;
- 		  	  	  		       break;
- 		  	  	      case AYRILDI_MI:
-		  	  	    	  	  v4_mod=5;
- 		  	  	    	  //STAGE COMMUNICATION !!!!!
- 		  	  	    	  if(stage_communication==0){
- 		  	  	    		  BOOSTER=AYRILDI;
- 		  	  	    	  }
- 		  	  	    	  else if(stage_communication==1){
- 		  	  	    		  BOOSTER=AYRILMADI;
- 		  	  	    	  }
- 		  	  	  		       break;
- 		  	  	      case AYRILDI:
-		  	  	    	  	 v4_mod=6;
- 		  	  	    	  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
+				  BOOSTER=AYRILDI_MI;
+				   break;
+		  case AYRILDI_MI:
+				  v4_mod=5;
+			  //STAGE COMMUNICATION !!!!!
+			  if(stage_communication==0){
+				  BOOSTER=AYRILDI;
+			  }
+			  else if(stage_communication==1){
+				  BOOSTER=AYRILMADI;
+			  }
+				   break;
+		  case AYRILDI:
+				 v4_mod=6;
+			  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
- 		  	  	  		       break;
- 		  	  	      case AYRILMADI:
-		  	  	    	  	  v4_mod=7;
- 		  	  	    	  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
+				   break;
+		  case AYRILMADI:
+				  v4_mod=7;
+			  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
 
- 		  	  	  		       break;
- 		  	  	      case FINISH:
-		  	  	    	  	  v4_mod=8;
- 		  	  	    	  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
+				   break;
+		  case FINISH:
+				  v4_mod=8;
+			  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
 
- 		  	  	  		       break;
- 		  	  	  	  }
+				   break;
+		  }
 
 
+/************************************************************************************/
+		  if(altitude >30 && BOOSTER <3)
+		  {
+			  altitude_rampa_control =1;
+		  }
+/*************************************************************************************/
+		  if(altitude>altitude_max) altitude_max = altitude;
+
+		  if(speed>speed_max) speed_max = speed;
+
+		  if( Lsm_Sensor.Accel_X> x_max) x_max =  Lsm_Sensor.Accel_X;
 
 		  if(adc_flag ==1)
 		  {
@@ -1143,6 +1081,85 @@ int8_t user_i2c_write(uint8_t id, uint8_t reg_addr, uint8_t *data, uint16_t len)
 
   free(buf);
   return 0;
+}
+
+void union_converter()
+{
+	 float2unit8 f2u8_gpsalt;
+    f2u8_gpsalt.fVal=gps.altitude;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+5]=f2u8_gpsalt.array[i];
+		 }
+
+	 float2unit8 f2u8_latitude;
+	 f2u8_latitude.fVal=gps.latitude;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+9]=f2u8_latitude.array[i];
+		 }
+
+	 float2unit8 f2u8_longitude;
+	 f2u8_longitude.fVal=gps.longitude;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+13]=f2u8_longitude.array[i];
+		 }
+
+	 float2unit8 f2u8_altitude;
+	 f2u8_altitude.fVal=altitude;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+17]=f2u8_altitude.array[i];
+		 }
+	 float2unit8 f2u8_speed;
+	 f2u8_speed.fVal=speed;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+21]=f2u8_speed.array[i];
+		 }
+
+	 float2unit8 f2u8_temp;
+	 f2u8_temp.fVal=temperature;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+25]=f2u8_temp.array[i];
+		 }
+
+	 float2unit8 f2u8_accx;
+	 f2u8_accx.fVal=Lsm_Sensor.Accel_X;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+29]=f2u8_accx.array[i];
+		 }
+
+	 float2unit8 f2u8_accy;
+	 f2u8_accy.fVal=Lsm_Sensor.Accel_Y;
+	 	 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+33]=f2u8_accy.array[i];
+		 }
+
+	 float2unit8 f2u8_accz;
+	 f2u8_accz.fVal=Lsm_Sensor.Accel_Z;
+	 	 for(uint8_t i=0;i<4;i++)
+		 {
+		    loratx[i+37]=f2u8_accz.array[i];
+		 }
+
+	 float2unit8 f2u8_roll;
+	 f2u8_roll.fVal=Lsm_Sensor.Roll;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+41]=f2u8_roll.array[i];
+		 }
+
+	 float2unit8 f2u8_pitch;
+	 f2u8_pitch.fVal=real_pitch;
+		 for(uint8_t i=0;i<4;i++)
+		 {
+			loratx[i+45]=f2u8_pitch.array[i];
+		 }
 }
 /* USER CODE END 4 */
 
