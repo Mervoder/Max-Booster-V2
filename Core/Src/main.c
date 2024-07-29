@@ -85,6 +85,7 @@ uint8_t v4_battery=0;
 uint8_t v4_mod=0;
 uint8_t stage_communication=0;
 uint8_t motor_burnout=0;
+uint8_t kesin_burnout=0;
 
 uint8_t BUTTON_STATE=0;
 
@@ -95,7 +96,7 @@ uint8_t readData[50] = {0};
 uint8_t loratx[LORA_TX_BUFFER_SIZE];
 uint8_t lora_flag=0;
 uint8_t sensor_flag=0;
-
+uint8_t buzzer_flag=0;
 
 float temperature=0;
 float humidity=0;
@@ -111,6 +112,7 @@ float altitude_max , speed_max, x_max;
 float real_pitch, real_roll , toplam_pitch,toplam_roll;
 float altitude_kalman;
 uint8_t  sensor_counter =0, altitude_rampa_control=0;
+uint16_t stage_sayac =0;
 KalmanFilter kf;
 
 
@@ -147,7 +149,7 @@ void user_delay_ms(uint32_t period);
 float BME280_Get_Altitude(void);
 void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE);
 void union_converter();
-
+void Altitude_Offset();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -192,7 +194,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			counter =0;
 			HAL_ADC_Start_IT(&hadc1);
 		}
-
+		if(buzzer_flag == 1) HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
 
 	}
 	if(htim==&htim10){
@@ -202,7 +204,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       motor_burnout++;
 	}
 	if(htim==&htim7){
-      motor_burnout++;
+      kesin_burnout++;
 	}
 }
 
@@ -271,6 +273,8 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, GPIO_PIN_RESET);//C
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);//D
 
+
+
   HAL_UART_Receive_IT(&huart2,&rx_data,1);
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
@@ -288,43 +292,32 @@ int main(void)
   HAL_ADC_Start_IT(&hadc1);
   KalmanFilter_Init(&kf, 0.005, 0.1, 0.0);
 
-  dev.dev_id = BME280_I2C_ADDR_PRIM;
-  dev.intf = BME280_I2C_INTF;
-  dev.read = user_i2c_read;
-  dev.write = user_i2c_write;
-  dev.delay_ms = user_delay_ms;
 
-  rslt = bme280_init(&dev);
+   dev.dev_id = BME280_I2C_ADDR_PRIM;
+   dev.intf = BME280_I2C_INTF;
+   dev.read = user_i2c_read;
+   dev.write = user_i2c_write;
+   dev.delay_ms = user_delay_ms;
 
-  dev.settings.osr_h = BME280_OVERSAMPLING_1X;
-  dev.settings.osr_p = BME280_OVERSAMPLING_4X;
-  dev.settings.osr_t = BME280_OVERSAMPLING_2X;
-  dev.settings.filter = BME280_FILTER_COEFF_16;
-  rslt = bme280_set_sensor_settings(BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL, &dev);
+   rslt = bme280_init(&dev);
 
-  ////ALTITUDE OFFSET
-for(uint8_t i=0;i<5;i++)
-{
-	HAL_Delay(40);
-  rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
-  rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
-  if(rslt == BME280_OK)
-  { pressure = comp_data.pressure;
-    offset_altitude=BME280_Get_Altitude();
-  }
-}
+   dev.settings.osr_h = BME280_OVERSAMPLING_1X;
+   dev.settings.osr_p = BME280_OVERSAMPLING_4X;
+   dev.settings.osr_t = BME280_OVERSAMPLING_2X;
+   dev.settings.filter = BME280_FILTER_COEFF_16;
+   rslt = bme280_set_sensor_settings(BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL, &dev);
+
+   ////ALTITUDE OFFSET
 
 
-
-  for(uint8_t i=0;i<30;i++)
-  {
-  		  	    HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
-  		  	    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
-  		  	    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
-  		  		HAL_Delay(100);
-  }
-
-
+    Altitude_Offset();
+    HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
+	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
+	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
+	HAL_Delay(1000);
+	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
+	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
+	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
 
   /* USER CODE END 2 */
 
@@ -336,9 +329,9 @@ for(uint8_t i=0;i<5;i++)
 
 		   if(sensor_flag==1){
 					sensor_flag=0;
-					prev_alt=altitude;
+					prev_alt=altitude_kalman;
 					rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
-					/* �?��?�터 취�? */
+
 					rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 					if(rslt == BME280_OK)
 					{
@@ -347,7 +340,7 @@ for(uint8_t i=0;i<5;i++)
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
 					  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					  speed=(altitude-prev_alt)*20;
+					  speed=(altitude_kalman-prev_alt)*20;
 
 
 					}
@@ -377,8 +370,12 @@ for(uint8_t i=0;i<5;i++)
 
 
 					 stage_communication=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+//					 if(stage_communication == 0) buzzer_flag=0;
+//					 else buzzer_flag=1;
 					 BUTTON_STATE=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
-					 FreeFall_Detection();
+					// FreeFall_Detection();
+
+					 stage_sayac++;
 		   }
 
 
@@ -415,9 +412,10 @@ for(uint8_t i=0;i<5;i++)
 		  case RAMPA:
 				  v4_mod=1;
 			  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
-			  if(Lsm_Sensor.Accel_X > 7){
+			  if(Lsm_Sensor.Accel_X > 5){
 				  BOOSTER=UCUS;
 				  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
+			     HAL_TIM_Base_Start_IT(&htim7); 	  // 6.5 sn başlat
 				  }
 				  break;
 		  case UCUS:
@@ -425,49 +423,74 @@ for(uint8_t i=0;i<5;i++)
 			  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
 			  if(motor_burnout==2)
 			  {	 HAL_TIM_Base_Stop_IT(&htim6);
-				 HAL_TIM_Base_Start_IT(&htim7);
+			     //HAL_TIM_Base_Stop_IT(&htim7);
 				 BOOSTER=BURNOUT;
-				 motor_burnout=0;
+
 			  }
 				   break;
 		  case BURNOUT:
 				  v4_mod=3;
 			  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
-			  if(Lsm_Sensor.Accel_X<-3 && motor_burnout==2 ){
-				HAL_TIM_Base_Stop_IT(&htim7);
+			  if((Lsm_Sensor.Accel_X<5 && altitude_rampa_control == 1/**normalde 1*/)   || (kesin_burnout>=2) ){
 				BOOSTER=AYIR;
-				motor_burnout=0;
+
 			  }
 				   break;
 		  case AYIR:
 				  v4_mod=4;
 			  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
-
+				  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, SET); // port A ateşle
 				  BOOSTER=AYRILDI_MI;
+				  stage_sayac=0;
+
 				   break;
 		  case AYRILDI_MI:
 				  v4_mod=5;
 			  //STAGE COMMUNICATION !!!!!
-			  if(stage_communication==0){
-				  BOOSTER=AYRILDI;
-			  }
-			  else if(stage_communication==1){
-				  BOOSTER=AYRILMADI;
-			  }
+			if(stage_sayac >= 33) // kopmayı bekleme süresi
+			{
+				  if(stage_communication==0){
+
+					  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // port a kapat
+
+					  BOOSTER=AYRILDI;
+				  }
+				  else if(stage_communication==1){
+					  BOOSTER=AYRILMADI;
+
+				  }
+
+
+			}
 				   break;
 		  case AYRILDI:
 				 v4_mod=6;
 			  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
+
+				 if((real_pitch <= 32) && speed <= 2 && altitude < altitude_max )
+				{
+
+					 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+
+				}
 
 				   break;
 		  case AYRILMADI:
 				  v4_mod=7;
 			  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
 
+				  // Booster son çare kurtarması
+			if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 )
+				{
+				 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+				}
+
 				   break;
 		  case FINISH:
 				  v4_mod=8;
 			  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
+
+				  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, RESET); // Port D
 
 				   break;
 		  }
@@ -498,10 +521,6 @@ for(uint8_t i=0;i<5;i++)
 			}
 
 
-	//	  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9)|| HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) )
-	//	  {
-
-		//  }
 
 
     /* USER CODE END WHILE */
@@ -737,9 +756,9 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 8400;
+  htim7.Init.Prescaler = 8400-1;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 19999;
+  htim7.Init.Period = 65000-1;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
   {
@@ -949,7 +968,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PC14 CS_Pin BUZZER_Pin GATE_D_Pin
@@ -1160,6 +1179,20 @@ void union_converter()
 		 {
 			loratx[i+45]=f2u8_pitch.array[i];
 		 }
+}
+
+void Altitude_Offset()
+{
+	for(uint8_t i=0;i<5;i++)
+	{
+		HAL_Delay(50);
+	  rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
+	  rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
+	  if(rslt == BME280_OK)
+	  { pressure = comp_data.pressure;
+	    offset_altitude=BME280_Get_Altitude();
+	  }
+	}
 }
 /* USER CODE END 4 */
 
