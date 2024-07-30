@@ -402,7 +402,7 @@ int main(void)
 
 		loratx[69]='\n';
 
-    	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
+    	HAL_UART_Transmit(&huart3,loratx,LORA_TX_BUFFER_SIZE ,1000);
 
          }
 
@@ -516,7 +516,7 @@ int main(void)
 			  // 8.4V = 2476 adc val 1,99V 0,58V
 
 		  adc_pil_val=(float)( ( ( (adc/4095)*3.3)-1.41) / (1.99-1.41) ) *100  ;
-
+		  v4_battery= adc_pil_val;
 
 			}
 
