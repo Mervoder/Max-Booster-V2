@@ -341,7 +341,7 @@ int main(void)
     HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
-	HAL_Delay(1000);
+	//HAL_Delay(1000);
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
@@ -397,9 +397,9 @@ int main(void)
 
 
 					 stage_communication=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-					 if(stage_communication == 0) { buzzer_long=1; buzzer_short =0;}
+					 if(stage_communication == 0) { buzzer_long=0; buzzer_short =0;}
 					 else {
-						 buzzer_short=1;
+						 buzzer_short=0;
 						 buzzer_long =0;
 					 }
 					 BUTTON_STATE=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
@@ -532,7 +532,7 @@ int main(void)
 			  altitude_rampa_control =1;
 		  }
 /*************************************************************************************/
-		  if(altitude>altitude_max) altitude_max = altitude;
+		  if(altitude>altitude_max) altitude_max = altitude_kalman;
 
 		  if(speed>speed_max) speed_max = speed;
 
