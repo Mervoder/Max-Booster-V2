@@ -79,6 +79,8 @@ float adc =0;
 uint8_t counter=0;
 uint8_t adc_flag=0;
 
+int buzzer_long=0 , buzzer_short=0, buzzer_ariza=0 ;
+int buzzer_short_counter , buzzer_long_counter , buzzer_ariza_counter;
 
 
 uint8_t v4_battery=0;
@@ -194,12 +196,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			counter =0;
 			HAL_ADC_Start_IT(&hadc1);
 		}
-		if(buzzer_flag == 1) HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+
+		if(buzzer_long ==1 && buzzer_long_counter>=2)
+		{
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+			buzzer_long_counter = 0;
+		}
+		buzzer_long_counter++;
 
 	}
+
 	if(htim==&htim10){
 		sensor_flag=1;
+
+		if(buzzer_ariza ==1 && buzzer_ariza_counter>=3)
+		{
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+			buzzer_ariza_counter = 0;
+		}
+		buzzer_ariza_counter++;
+		if(buzzer_ariza_counter >=4) buzzer_ariza_counter=0;
+
+		if(buzzer_short ==1 && buzzer_short_counter>=9)
+		{
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+			buzzer_short_counter = 0;
+		}
+		buzzer_short_counter++;
+		if(buzzer_short_counter >=10) buzzer_short_counter=0;
+
 	}
+
 	if(htim==&htim6){
       motor_burnout++;
 	}
@@ -370,8 +397,11 @@ int main(void)
 
 
 					 stage_communication=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-//					 if(stage_communication == 0) buzzer_flag=0;
-//					 else buzzer_flag=1;
+					 if(stage_communication == 0) { buzzer_long=1; buzzer_short =0;}
+					 else {
+						 buzzer_short=1;
+						 buzzer_long =0;
+					 }
 					 BUTTON_STATE=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
 					// FreeFall_Detection();
 
