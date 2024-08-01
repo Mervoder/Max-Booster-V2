@@ -197,33 +197,33 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_ADC_Start_IT(&hadc1);
 		}
 
-		if(buzzer_long ==1 && buzzer_long_counter>=2)
-		{
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-			buzzer_long_counter = 0;
-		}
-		buzzer_long_counter++;
+//		if(buzzer_long ==1 && buzzer_long_counter>=2)
+//		{
+//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+//			buzzer_long_counter = 0;
+//		}
+//		buzzer_long_counter++;
 
 	}
 
 	if(htim==&htim10){
 		sensor_flag=1;
-
-		if(buzzer_ariza ==1 && buzzer_ariza_counter>=3)
-		{
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-			buzzer_ariza_counter = 0;
-		}
-		buzzer_ariza_counter++;
-		if(buzzer_ariza_counter >=4) buzzer_ariza_counter=0;
-
-		if(buzzer_short ==1 && buzzer_short_counter>=9)
-		{
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-			buzzer_short_counter = 0;
-		}
-		buzzer_short_counter++;
-		if(buzzer_short_counter >=10) buzzer_short_counter=0;
+//
+//		if(buzzer_ariza ==1 && buzzer_ariza_counter>=3)
+//		{
+//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+//			buzzer_ariza_counter = 0;
+//		}
+//		buzzer_ariza_counter++;
+//		if(buzzer_ariza_counter >=4) buzzer_ariza_counter=0;
+//
+//		if(buzzer_short ==1 && buzzer_short_counter>=9)
+//		{
+//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+//			buzzer_short_counter = 0;
+//		}
+//		buzzer_short_counter++;
+//		if(buzzer_short_counter >=10) buzzer_short_counter=0;
 
 	}
 
@@ -242,7 +242,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	{
 		adc= HAL_ADC_GetValue(&hadc1);
 
-
+		 HAL_ADC_Start_IT(&hadc1);
 		adc_flag = 0;
 	}
 }
@@ -341,11 +341,11 @@ int main(void)
     HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
-	//HAL_Delay(1000);
+	HAL_Delay(1000);
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
-
+	HAL_Delay(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -397,11 +397,11 @@ int main(void)
 
 
 					 stage_communication=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-					 if(stage_communication == 0) { buzzer_long=0; buzzer_short =0;}
-					 else {
-						 buzzer_short=0;
-						 buzzer_long =0;
-					 }
+//					 if(stage_communication == 0) { buzzer_long=0; buzzer_short =0;}
+//					 else {
+//						 buzzer_short=0;
+//						 buzzer_long =0;
+//					 }
 					 BUTTON_STATE=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
 					// FreeFall_Detection();
 
