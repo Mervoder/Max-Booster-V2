@@ -242,7 +242,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	{
 		adc= HAL_ADC_GetValue(&hadc1);
 
-		 HAL_ADC_Start_IT(&hadc1);
+
 		adc_flag = 0;
 	}
 }
@@ -305,7 +305,7 @@ int main(void)
   HAL_UART_Receive_IT(&huart2,&rx_data,1);
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
-
+  HAL_ADC_Start_IT(&hadc1);
 
 
   MAFilter_Init(&accx);
@@ -316,8 +316,7 @@ int main(void)
   lwgps_init(&gps);
   LSM6DSLTR_Init();
   E220_CONFIG(0x6,0x4A,0X10,1);
-  HAL_ADC_Start_IT(&hadc1);
-  KalmanFilter_Init(&kf, 0.005, 0.1, 0.0);
+
 
 
    dev.dev_id = BME280_I2C_ADDR_PRIM;
@@ -346,6 +345,8 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
 	HAL_Delay(100);
+	// KalmanFilter_Init(&kf, 0.005, 0.1, 0.0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -356,7 +357,7 @@ int main(void)
 
 		   if(sensor_flag==1){
 					sensor_flag=0;
-					prev_alt=altitude_kalman;
+					prev_alt=altitude;
 					rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
 
 					rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
@@ -366,8 +367,8 @@ int main(void)
 					  humidity = comp_data.humidity;
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
-					  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					  speed=(altitude_kalman-prev_alt)*20;
+					//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
+					  speed=(altitude-prev_alt)*20;
 
 
 					}
@@ -532,7 +533,7 @@ int main(void)
 			  altitude_rampa_control =1;
 		  }
 /*************************************************************************************/
-		  if(altitude>altitude_max) altitude_max = altitude_kalman;
+		  if(altitude>altitude_max) altitude_max = altitude;
 
 		  if(speed>speed_max) speed_max = speed;
 
