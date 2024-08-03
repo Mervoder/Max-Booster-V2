@@ -206,7 +206,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	}
 
-	if(htim==&htim10){
+	if(htim==&htim10){ //50 ms timer
 		sensor_flag=1;
 //
 //		if(buzzer_ariza ==1 && buzzer_ariza_counter>=3)
@@ -243,7 +243,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		adc= HAL_ADC_GetValue(&hadc1);
 
 
-		adc_flag = 0;
+		adc_flag = 1;
 	}
 }
 
@@ -315,7 +315,7 @@ int main(void)
 
   lwgps_init(&gps);
   LSM6DSLTR_Init();
-  E220_CONFIG(0x6,0x4A,0X10,1);
+  E220_CONFIG(0x6,0x4A,0X10,1); // 0x10 ch
 
 
 
@@ -424,7 +424,7 @@ int main(void)
 		union_converter();
 
 		loratx[49]=v4_battery;
-		loratx[50]=v4_mod;
+		loratx[50]=0x32; // v4mod
 		loratx[51]=stage_communication;
 		 for(uint8_t i=52;i<69;i++)
 		 {
@@ -433,7 +433,7 @@ int main(void)
 
 		loratx[69]='\n';
 
-    	HAL_UART_Transmit(&huart3,loratx,LORA_TX_BUFFER_SIZE ,1000);
+    	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
 
          }
 
@@ -548,7 +548,7 @@ int main(void)
 
 		  adc_pil_val=(float)( ( ( (adc/4095)*3.3)-1.41) / (1.99-1.41) ) *100  ;
 		  v4_battery= adc_pil_val;
-
+		  adc_flag=0;
 			}
 
 
