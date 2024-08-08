@@ -368,7 +368,7 @@ int main(void)
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
 					//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					  speed=(altitude-prev_alt)*20;
+					  speed=(altitude-prev_alt)*33.3;
 
 
 					}
