@@ -498,11 +498,11 @@ int main(void)
 				 v4_mod=6;
 			  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
-				 if((real_pitch <= 32) && speed <= 2 && altitude < altitude_max )
+				 if( speed <= 2 && altitude < altitude_max )
 				{
 
 					 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
-
+					 BOOSTER=FINISH;
 				}
 
 				   break;
@@ -514,6 +514,7 @@ int main(void)
 			if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 )
 				{
 				 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+				 BOOSTER=FINISH;
 				}
 
 				   break;
