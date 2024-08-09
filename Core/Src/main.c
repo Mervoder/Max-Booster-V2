@@ -447,6 +447,7 @@ int main(void)
 				  BOOSTER=UCUS;
 				  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
 			     HAL_TIM_Base_Start_IT(&htim7); 	  // 6.5 sn başlat
+			  //   HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 				  }
 				  break;
 		  case UCUS:
@@ -498,10 +499,11 @@ int main(void)
 				 v4_mod=6;
 			  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
-				 if( speed <= 2 && altitude < altitude_max )
+				 if( speed <= 2 && altitude < altitude_max  && real_pitch <=60)
 				{
 
 					 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+					 HAL_Delay(50);
 					 BOOSTER=FINISH;
 				}
 
@@ -511,9 +513,11 @@ int main(void)
 			  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
 
 				  // Booster son çare kurtarması
-			if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 )
+			if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 && real_pitch <=60)
 				{
-				 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+				 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, RESET); // Port D
+				 HAL_Delay(50);
+
 				 BOOSTER=FINISH;
 				}
 
@@ -521,8 +525,8 @@ int main(void)
 		  case FINISH:
 				  v4_mod=8;
 			  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
-
-				  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, RESET); // Port D
+				  HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
+				  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // Port D
 
 				   break;
 		  }
