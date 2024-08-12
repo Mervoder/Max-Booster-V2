@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LORA_TX_BUFFER_SIZE 70
+#define LORA_TX_BUFFER_SIZE 75
 #define RX_BUFFER_SIZE 128
 #define DEVICE_ID 1
 
@@ -81,7 +81,7 @@ uint8_t adc_flag=0;
 
 int buzzer_long=0 , buzzer_short=0, buzzer_ariza=0 ;
 int buzzer_short_counter , buzzer_long_counter , buzzer_ariza_counter;
-
+int new_data=0,kontrol_number=0 ,  speed_time, speed_time_prev ;
 
 uint8_t v4_battery=0;
 uint8_t v4_mod=0;
@@ -103,7 +103,7 @@ uint8_t buzzer_flag=0;
 float temperature=0;
 float humidity=0;
 float altitude=0;
-float offset_altitude=0;
+float offset_altitude=0 ;
 float pressure=0;
 float alt=0;
 float P0 = 1013.25;
@@ -197,33 +197,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_ADC_Start_IT(&hadc1);
 		}
 
-//		if(buzzer_long ==1 && buzzer_long_counter>=2)
-//		{
-//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-//			buzzer_long_counter = 0;
-//		}
-//		buzzer_long_counter++;
 
 	}
 
 	if(htim==&htim10){ //50 ms timer
 		sensor_flag=1;
-//
-//		if(buzzer_ariza ==1 && buzzer_ariza_counter>=3)
-//		{
-//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-//			buzzer_ariza_counter = 0;
-//		}
-//		buzzer_ariza_counter++;
-//		if(buzzer_ariza_counter >=4) buzzer_ariza_counter=0;
-//
-//		if(buzzer_short ==1 && buzzer_short_counter>=9)
-//		{
-//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
-//			buzzer_short_counter = 0;
-//		}
-//		buzzer_short_counter++;
-//		if(buzzer_short_counter >=10) buzzer_short_counter=0;
+
 
 	}
 
@@ -368,10 +347,12 @@ int main(void)
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
 					//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					  speed=(altitude-prev_alt)*33.3;
-
+					  speed_time = (HAL_GetTick()-speed_time_prev)/1000.0f;
+					  speed = (altitude - prev_alt) * speed_time;
+					  speed_time_prev = speed_time;
 
 					}
+
 					 LSM6DSLTR_Read_Accel_Data(&Lsm_Sensor);
 					 calculate_roll_pitch(&Lsm_Sensor);
 					 LSM6DSLTR_Read_Gyro_Data(&Lsm_Sensor);
@@ -394,6 +375,7 @@ int main(void)
 						 toplam_roll=0;
 						 toplam_pitch=0;
 						 sensor_counter =0;
+						 new_data=1;
 					 }
 
 
@@ -430,8 +412,8 @@ int main(void)
 		 {
 			loratx[i]='0';
 		 }
-
-		loratx[69]='\n';
+		loratx[73]=v4_mod;
+		loratx[74]='\n';
 
     	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
 
@@ -441,99 +423,118 @@ int main(void)
 		  switch(BOOSTER){
 
 		  case RAMPA:
-				  v4_mod=1;
-			  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
-			  if(Lsm_Sensor.Accel_X > 5){
-				  BOOSTER=UCUS;
-				  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
-			     HAL_TIM_Base_Start_IT(&htim7); 	  // 6.5 sn başlat
-			  //   HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
-				  }
+						  v4_mod=1;
+					  //RAMPA MODU  ÜST KADEME HABERLE�?ME KONTROL ET
+					  if(Lsm_Sensor.Accel_X > 5 && new_data==1)
+					  {
+						  kontrol_number++;
+						  new_data=0;
+					  }
+
+						if(kontrol_number >10)
+						{
+						 BOOSTER=UCUS;
+						  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
+						 HAL_TIM_Base_Start_IT(&htim7); 	  // 6.5 sn başlat
+
+						 kontrol_number=0;
+						}
+
 				  break;
 		  case UCUS:
-				  v4_mod=2;
-			  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
-			  if(motor_burnout==2)
-			  {	 HAL_TIM_Base_Stop_IT(&htim6);
-			     //HAL_TIM_Base_Stop_IT(&htim7);
-				 BOOSTER=BURNOUT;
+						  v4_mod=2;
+					  // FLASH MEMORYE KAYDETMEYE BA�?LA VE MOTOR YANMA SÜRESİ KADAR SAY
+					  if(motor_burnout==2)
+					  {	 HAL_TIM_Base_Stop_IT(&htim6);
+						 //HAL_TIM_Base_Stop_IT(&htim7);
+						 BOOSTER=BURNOUT;
 
-			  }
+					  }
 				   break;
 		  case BURNOUT:
-				  v4_mod=3;
-			  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
-			  if((Lsm_Sensor.Accel_X<5 && altitude_rampa_control == 1/**normalde 1*/)   || (kesin_burnout>=2) ){
-				BOOSTER=AYIR;
+						  v4_mod=3;
+					  //İVME VE HIZ DE�?ERLERİNE BAKARAK SAFETY SÜRESİ GEÇMEDEN KADEMEYİ AYIRABİLİR
+					  if((Lsm_Sensor.Accel_X<5 && altitude_rampa_control == 1)  || (kesin_burnout>=2) ){
+						BOOSTER=AYIR;
 
-			  }
+					  }
 				   break;
 		  case AYIR:
-				  v4_mod=4;
-			  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
-				  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, SET); // port A ateşle
-				  BOOSTER=AYRILDI_MI;
-				  stage_sayac=0;
+						  v4_mod=4;
+					  // MOTOR YANMA SÜRESİ+SAFETY SÜRESİ GEÇTİYSE AYIRMA SİNYALİ GÖNDER
+						  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, SET); // port A ateşle
+						  BOOSTER=AYRILDI_MI;
+						  stage_sayac=0;
 
 				   break;
 		  case AYRILDI_MI:
-				  v4_mod=5;
-			  //STAGE COMMUNICATION !!!!!
-			if(stage_sayac >= 33) // kopmayı bekleme süresi
-			{
-				  if(stage_communication==0){
+						  v4_mod=5;
+					  //STAGE COMMUNICATION !!!!!
+					if(stage_sayac >= 33) // kopmayı bekleme süresi
+					{
+						  if(stage_communication==0){
 
-					  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // port a kapat
+							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // port a kapat
 
-					  BOOSTER=AYRILDI;
-				  }
-				  else if(stage_communication==1){
-					  BOOSTER=AYRILMADI;
+							  BOOSTER=AYRILDI;
+						  }
+						  else if(stage_communication==1){
+							  BOOSTER=AYRILMADI;
 
-				  }
+						  }
 
-
-			}
+					}
 				   break;
+
 		  case AYRILDI:
-				 v4_mod=6;
-			  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
+						 v4_mod=6;
+					  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
-				 if( speed <= 2 && altitude < altitude_max  && real_pitch <=60)
-				{
-
-					 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
-					 HAL_Delay(50);
-					 BOOSTER=FINISH;
-				}
+						 if( speed <= 2 && altitude < altitude_max && new_data==1)
+						{
+							 kontrol_number++;
+							 new_data=0;
+						}
+						 if(kontrol_number >10)
+						{
+						 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+						 HAL_Delay(50);
+						 BOOSTER=FINISH;
+						}
 
 				   break;
 		  case AYRILMADI:
-				  v4_mod=7;
-			  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
+						  v4_mod=7;
+					  //ÇOK SÜRE GEÇTİ VE HALA AYRILMADI İSE BOOSTER PARA�?ÜT AÇMA
 
-				  // Booster son çare kurtarması
-			if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 && real_pitch <=60)
-				{
-				 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, RESET); // Port D
-				 HAL_Delay(50);
+						  // Booster son çare kurtarması
+					if(altitude <= 500 && speed < -3  && altitude_rampa_control == 1 && new_data==1)
+					{
+						kontrol_number++;
+						 new_data=0;
+					}
 
-				 BOOSTER=FINISH;
-				}
+					 if(kontrol_number >10)
+					 {
+						 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, SET); // Port D
+						 HAL_Delay(50);
+
+						 BOOSTER=FINISH;
+					 }
 
 				   break;
 		  case FINISH:
-				  v4_mod=8;
-			  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
-				  HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
-				  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // Port D
+						  v4_mod=8;
+					  //KURTARMA GERÇEKLE�?Tİ VERİ KAYDETMEYİ BIRAK VE BUZZERI AÇ
+						  HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
+						  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, RESET); // Port D
 
 				   break;
 		  }
 
 
 /************************************************************************************/
-		  if(altitude >30 && BOOSTER <3)
+		  if(altitude >150 && BOOSTER <3)
 		  {
 			  altitude_rampa_control =1;
 		  }
@@ -1215,6 +1216,13 @@ void union_converter()
 		 {
 			loratx[i+45]=f2u8_pitch.array[i];
 		 }
+
+		 f2u8_altitude.fVal=altitude_max;
+
+			loratx[69] = f2u8_altitude.array[0];
+			loratx[70] = f2u8_altitude.array[1];
+			loratx[71] = f2u8_altitude.array[2];
+			loratx[72] = f2u8_altitude.array[3];
 }
 
 void Altitude_Offset()
