@@ -347,9 +347,9 @@ int main(void)
 					  pressure = comp_data.pressure;
 					  altitude=BME280_Get_Altitude()-offset_altitude;
 					//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					  speed_time = (HAL_GetTick()-speed_time_prev)/1000.0f;
-					  speed = (altitude - prev_alt) * speed_time;
-					  speed_time_prev = speed_time;
+					//  speed_time = (HAL_GetTick()-speed_time_prev)/1000.0f;
+					  speed = (altitude - prev_alt) * 33.3;
+					//  speed_time_prev = speed_time;
 
 					}
 
@@ -431,7 +431,7 @@ int main(void)
 						  new_data=0;
 					  }
 
-						if(kontrol_number >10)
+						if(kontrol_number >5)
 						{
 						 BOOSTER=UCUS;
 						  HAL_TIM_Base_Start_IT(&htim6); //4.5 sn sayıyor
@@ -490,7 +490,7 @@ int main(void)
 						 v4_mod=6;
 					  //AYRILMA GERÇEKLESTI BOOSTER APOGEE YAKALA
 
-						 if( speed <= 2 && altitude < altitude_max && new_data==1)
+						 if( speed <= 2 && altitude < altitude_max && altitude >300 && new_data==1)
 						{
 							 kontrol_number++;
 							 new_data=0;
@@ -860,7 +860,7 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 16800;
+  htim11.Init.Prescaler = 16800-1;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim11.Init.Period = 14999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
