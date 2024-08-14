@@ -294,7 +294,7 @@ int main(void)
 
   lwgps_init(&gps);
   LSM6DSLTR_Init();
-  E220_CONFIG(0x6,0x4A,0X10,1); // 0x10 ch
+  E220_CONFIG(0x6,0x4A,0X11,1); // 0x10 ch
 
 
 
@@ -320,10 +320,14 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
 	HAL_Delay(1000);
+
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_4);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
 	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
+
 	HAL_Delay(100);
+
+
 	// KalmanFilter_Init(&kf, 0.005, 0.1, 0.0);
 
   /* USER CODE END 2 */
@@ -340,18 +344,7 @@ int main(void)
 					rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
 
 					rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
-					if(rslt == BME280_OK)
-					{
-					  temperature = comp_data.temperature/100.00;
-					  humidity = comp_data.humidity;
-					  pressure = comp_data.pressure;
-					  altitude=BME280_Get_Altitude()-offset_altitude;
-					//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
-					//  speed_time = (HAL_GetTick()-speed_time_prev)/1000.0f;
-					  speed = (altitude - prev_alt) * 33.3;
-					//  speed_time_prev = speed_time;
 
-					}
 
 					 LSM6DSLTR_Read_Accel_Data(&Lsm_Sensor);
 					 calculate_roll_pitch(&Lsm_Sensor);
@@ -370,8 +363,21 @@ int main(void)
 					 sensor_counter++;
 					 if(sensor_counter == 6)
 					 {
-						 real_pitch = toplam_pitch/6;
-						 real_roll = toplam_roll/6;
+							if(rslt == BME280_OK)
+								{
+								  temperature = comp_data.temperature/100.00;
+								  humidity = comp_data.humidity;
+								  pressure = comp_data.pressure;
+								  altitude=BME280_Get_Altitude()-offset_altitude;
+								//  altitude_kalman= KalmanFilter_Update(&kf, altitude);
+								//  speed_time = (HAL_GetTick()-speed_time_prev)/1000.0f;
+								  speed = (altitude - prev_alt) * 3.33;
+								//  speed_time_prev = speed_time;
+
+								}
+
+						 real_pitch = toplam_pitch/10;
+						 real_roll = toplam_roll/10;
 						 toplam_roll=0;
 						 toplam_pitch=0;
 						 sensor_counter =0;
@@ -397,9 +403,9 @@ int main(void)
 	   lora_flag=0;
 
 
-		loratx[0]=0x8;
-		loratx[1]=0x2A;
-		loratx[2]=0x10;
+		loratx[0]=0x7;
+		loratx[1]=0x2B;
+		loratx[2]=0x12;
 		loratx[3]=DEVICE_ID;
 		loratx[4]=gps.sats_in_view;
 
@@ -415,7 +421,8 @@ int main(void)
 		loratx[73]=v4_mod;
 		loratx[74]='\n';
 
-    	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
+    	//HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
+		HAL_UART_Transmit(&huart3,loratx,LORA_TX_BUFFER_SIZE ,1000);
 
          }
 
@@ -862,7 +869,7 @@ static void MX_TIM11_Init(void)
   htim11.Instance = TIM11;
   htim11.Init.Prescaler = 16800-1;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 14999;
+  htim11.Init.Period = 19999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
@@ -1079,7 +1086,7 @@ void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE)
     cfg_buff[0] = ADDH;
     cfg_buff[1] = ADDL;
     cfg_buff[2] = 0x62;
-    cfg_buff[3] = 0x00;
+    cfg_buff[3] = 0x40; // 0x00
     cfg_buff[4] = CHN;
 
     switch(mode){
