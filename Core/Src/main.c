@@ -43,6 +43,16 @@
 #define RX_BUFFER_SIZE 128
 #define DEVICE_ID 1
 
+
+#define CMD_SET_REG 0xC0 // COMMAND FOR SETTING REGISTER
+#define CMD_READ_REG 0xC1 // COMMAND FOR READING REGISTER
+#define REG_ADD_H 0x0 // DEVICE ADDRESS HIGH BYTE
+#define REG_ADD_L 0x1 // DEVICE ADDRESS LOW BYTE
+#define REG0 0x2 // UART CONFIGURATION REGISTER
+#define REG1 0x3 // RF CONFIGURATION REGISTER
+#define REG2 0x4 // CHANNEL CONTROL
+#define REG3 0x5 // TRANSMISSION PARAMETER CONTROL
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -166,6 +176,57 @@ FIRFilter IMU_GYROZ;
 struct bme280_dev dev;
 struct bme280_data comp_data;
 int8_t rslt=0;
+int8_t receive_data=0;
+int8_t E220_write_register(uint8_t reg,uint8_t parameter)
+{
+
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, SET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, SET);
+
+	HAL_Delay(10);
+
+	uint8_t send_data[4]={CMD_SET_REG,reg,1,parameter};
+	uint8_t receive_data[4]={0};
+
+	HAL_UART_Transmit(&huart3,send_data ,4, 100);
+	HAL_UART_Receive(&huart3, receive_data, 4, 100);
+
+
+	if(receive_data[0]==CMD_READ_REG && receive_data[1]==reg && receive_data[2]==1 && receive_data[3] == parameter)
+		return receive_data[3];
+	else
+		return -1;
+
+}
+int8_t E220_read_register(uint8_t reg)
+{
+
+
+	uint8_t send_data[3]={CMD_READ_REG,reg,1};
+	uint8_t receive_data[4]={0};
+	HAL_UART_Transmit(&huart3,send_data ,3, 100);
+
+
+
+	HAL_UART_Receive(&huart3, receive_data, 4, 100);
+
+	if(receive_data[0]==CMD_READ_REG && receive_data[1]==reg && receive_data[2]==1)
+		return receive_data[3];
+	else
+		return -1;
+}
+int8_t E220_read_register_all(uint8_t *data)
+{
+
+	for(int i=0; i<8;i++){
+		data[i]=E220_read_register(i);
+		HAL_Delay(2);
+		if((int8_t)data[i]==(int8_t)-1)
+			return -1;
+	}
+	return 1;
+
+}
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -281,6 +342,34 @@ int main(void)
 
 
 
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x2, 0x62);
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x3, 0x40);
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x4, 0x10); // ch
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x5, 0x40);
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x6, 0x00);
+  HAL_Delay(100);
+  receive_data =E220_write_register(0x7, 0x00);
+  HAL_Delay(100);
+  receive_data =E220_write_register(0, 0x04); // h 0x04
+  HAL_Delay(100);
+
+  receive_data =E220_write_register(0x1, 0x01); // low 0x01
+  HAL_Delay(200);
+
+  receive_data = E220_read_register(0);
+  HAL_Delay(100);
+  receive_data = E220_read_register(1);
+  HAL_Delay(100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, SET);//m0
+  HAL_Delay(100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, RESET); //m1
+  HAL_Delay(100);
+
   HAL_UART_Receive_IT(&huart2,&rx_data,1);
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
@@ -294,9 +383,6 @@ int main(void)
 
   lwgps_init(&gps);
   LSM6DSLTR_Init();
-  E220_CONFIG(0x6,0x4A,0X11,1); // 0x10 ch
-
-
 
    dev.dev_id = BME280_I2C_ADDR_PRIM;
    dev.intf = BME280_I2C_INTF;
@@ -361,7 +447,7 @@ int main(void)
 					 toplam_roll+= Lsm_Sensor.Roll;
 
 					 sensor_counter++;
-					 if(sensor_counter == 6)
+					 if(sensor_counter == 10)
 					 {
 							if(rslt == BME280_OK)
 								{
@@ -403,9 +489,9 @@ int main(void)
 	   lora_flag=0;
 
 
-		loratx[0]=0x7;
-		loratx[1]=0x2B;
-		loratx[2]=0x12;
+		loratx[0]=0x09; // h 9
+		loratx[1]=0x02; //l 2
+		loratx[2]=0x10;
 		loratx[3]=DEVICE_ID;
 		loratx[4]=gps.sats_in_view;
 
@@ -421,8 +507,8 @@ int main(void)
 		loratx[73]=v4_mod;
 		loratx[74]='\n';
 
-    	//HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
-		HAL_UART_Transmit(&huart3,loratx,LORA_TX_BUFFER_SIZE ,1000);
+    	HAL_UART_Transmit_IT(&huart3,loratx,LORA_TX_BUFFER_SIZE );
+		//HAL_UART_Transmit(&huart3,loratx,LORA_TX_BUFFER_SIZE ,1000);
 
          }
 
@@ -1075,7 +1161,7 @@ int16_t I2C_Testsensor(void){
 }
 void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE)
 {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, SET);
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, SET);
     HAL_Delay(50);
 
@@ -1094,10 +1180,10 @@ void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE)
             cfg_buff[5] = 0x00;  // opsiyon
             break;
         case Fixed:
-            cfg_buff[5] = 0x11;
+            cfg_buff[5] = 0x51;
             break;
         default:
-            cfg_buff[5] = 0x11;
+            cfg_buff[5] = 0x51;
      }
 
      cfg_buff[6] = 0x00;
@@ -1107,7 +1193,7 @@ void E220_CONFIG(uint8_t ADDH, uint8_t ADDL, uint8_t CHN, uint8_t MODE)
     HAL_UART_Transmit(&huart3, (uint8_t*) cfg_buff, 8, 1000);
 
     HAL_Delay(25);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, RESET);
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, RESET);
     HAL_Delay(25);
 }
